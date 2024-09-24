@@ -22,5 +22,8 @@ public class Pacote {
     @OneToOne
     @JoinColumn
     private Pagamento pagamento;
+    @ManyToOne
+    @JoinColumn
+    private Cliente cliente;
 
 }

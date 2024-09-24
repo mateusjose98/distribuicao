@@ -1,33 +1,33 @@
 package com.mateusjose98.distribuicao.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Distribuicao {
+public class DistribuicaoClienteEstrategico {
+	
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private Long id;
-    private LocalDateTime dataEntrada;
+    
     @ManyToOne
     @JoinColumn
-    private Usuario usuario;
+    private Cliente cliente;
+    
     @ManyToOne
     @JoinColumn
-    private Pacote pacote;
-
-    @PrePersist
-    public void prePersist() {
-        dataEntrada = LocalDateTime.now();
-    }
-
+    private UnidadeTratamento unidadeTratamento;
 
 }

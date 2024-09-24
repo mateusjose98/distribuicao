@@ -22,4 +22,9 @@ public class UnidadeTratamento {
     private String nome;
     private Double porcentagemMaximaDiaria;
 
+    @OneToOne
+    @JoinColumn
+    private Usuario usuarioImpessoal;
+    
+
 }

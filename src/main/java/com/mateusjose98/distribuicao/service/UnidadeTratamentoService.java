@@ -1,14 +1,16 @@
 package com.mateusjose98.distribuicao.service;
 
-import com.mateusjose98.distribuicao.entity.UnidadeTratamento;
-import com.mateusjose98.distribuicao.repository.DistribuicaoRepository;
-import com.mateusjose98.distribuicao.repository.UnidadeTratamentoRepository;
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
+import com.mateusjose98.distribuicao.entity.Pacote;
+import com.mateusjose98.distribuicao.entity.UnidadeTratamento;
+import com.mateusjose98.distribuicao.repository.DistribuicaoEstrategicaRepository;
+import com.mateusjose98.distribuicao.repository.DistribuicaoRepository;
+import com.mateusjose98.distribuicao.repository.UnidadeTratamentoRepository;
 
 @Service
 public class UnidadeTratamentoService {
@@ -18,36 +20,38 @@ public class UnidadeTratamentoService {
     private UnidadeTratamentoRepository unidadeTratamentoRepository;
     @Autowired
     private DistribuicaoRepository distribuicaoRepository;
+    @Autowired
+    private DistribuicaoEstrategicaRepository distribuicaoEstrategicaRepository;
 
-    public List<UnidadeTratamento> listarUnidades() {
-        return unidadeTratamentoRepository.findAll();
+
+    public UnidadeTratamento selecionarProximaUnidadeDoDia(Pacote pacote) {
+
+        var distribuicaoEstrategica = distribuicaoEstrategicaRepository.findByCliente(pacote.getCliente());
+        
+        if(distribuicaoEstrategica.isPresent()) {
+        	return distribuicaoEstrategica.get().getUnidadeTratamento();
+        }
+       
+        return selecionaPorMaiorDefasagem();
     }
-
-    public UnidadeTratamento buscarUnidade(Long id) {
-        return unidadeTratamentoRepository.findById(id).orElse(null);
-    }
-
-    public UnidadeTratamento salvarUnidade(UnidadeTratamento unidadeTratamento) {
-        return unidadeTratamentoRepository.save(unidadeTratamento);
-    }
-
-    public UnidadeTratamento selecionarProximaUnidadeDoDia() {
+    
+    private UnidadeTratamento selecionaPorMaiorDefasagem() {
+    	        
+    	long quantidadeRecebidaHojePorTodos = distribuicaoRepository.countByDataDistribuicao(LocalDate.now());
+        
         UnidadeTratamento unidadeSelecionada = null;
-        LocalDate hoje = LocalDate.now();
-        List<UnidadeTratamento> unidades = this.listarUnidades();
-        long quantidadeRecebidaHojePorTodos = distribuicaoRepository.countByDataDistribuicao(hoje);
-
-        if(quantidadeRecebidaHojePorTodos == 0){
+        if(quantidadeRecebidaHojePorTodos == 0){ // escolhemos alguma por default
             return this.buscarUnidade(1L);
         }
 
+    	List<UnidadeTratamento> unidades = this.listarUnidades();    
         Double maiorDefasagem = Double.NEGATIVE_INFINITY;
         for(UnidadeTratamento unidadeCandidata : unidades) {
 
             Double porcentagemMaximaDiariaEsperada = unidadeCandidata.getPorcentagemMaximaDiaria() / CEM;
             Double qteTeoricaDaUnidade = quantidadeRecebidaHojePorTodos * porcentagemMaximaDiariaEsperada;
 
-            var qteRealJaRecebidaDaUnidade = distribuicaoRepository.countByUnidadeTratamentoAndDataDistribuicao(unidadeCandidata, hoje);
+            var qteRealJaRecebidaDaUnidade = distribuicaoRepository.countByUsuarioAndDataDistribuicao(unidadeCandidata.getUsuarioImpessoal(), LocalDate.now());
 
             Double defasagem = qteTeoricaDaUnidade - qteRealJaRecebidaDaUnidade;
 
@@ -58,5 +62,17 @@ public class UnidadeTratamentoService {
 
         }
         return unidadeSelecionada;
+    }
+    
+    public List<UnidadeTratamento> listarUnidades() {
+        return unidadeTratamentoRepository.findAll();
+    }
+
+    public UnidadeTratamento buscarUnidade(Long id) {
+        return unidadeTratamentoRepository.findById(id).orElse(null);
+    }
+
+    public UnidadeTratamento salvarUnidade(UnidadeTratamento unidadeTratamento) {
+        return unidadeTratamentoRepository.save(unidadeTratamento);
     }
 }
