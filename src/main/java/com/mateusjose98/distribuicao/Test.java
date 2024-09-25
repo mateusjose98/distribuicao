@@ -1,6 +1,5 @@
 package com.mateusjose98.distribuicao;
 
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -13,13 +12,15 @@ import org.springframework.web.client.RestTemplate;
 public class Test {
 
 
-//    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.DAYS)
+    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.DAYS)
     public void run() throws Exception {
         RestTemplate restTemplate = new RestTemplate();
-        int numeroPacotes = 10;
-        for (int i = 0; i < numeroPacotes; i++) {
-        	 String url = "http://localhost:8080/pagamento/" + new Random().nextInt(numeroPacotes);
-            String response = restTemplate.getForObject(url, String.class);
+        int numeroPacotes = 27;
+        for (int i = 1; i <= numeroPacotes; i++) {
+        	System.out.println(i);
+        	 String url = "http://localhost:8080/pagamento/" + i;
+            restTemplate.getForObject(url, String.class);
+//            Thread.sleep(1000L);
          
         }
     }
