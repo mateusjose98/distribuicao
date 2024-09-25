@@ -13,13 +13,14 @@ import org.springframework.web.client.RestTemplate;
 public class Test {
 
 
-    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.DAYS)
+//    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.DAYS)
     public void run() throws Exception {
         RestTemplate restTemplate = new RestTemplate();
-        for (int i = 0; i < 400; i++) {
-        	 String url = "http://localhost:8080/pagamento/" + new Random().nextInt(5);
+        int numeroPacotes = 10;
+        for (int i = 0; i < numeroPacotes; i++) {
+        	 String url = "http://localhost:8080/pagamento/" + new Random().nextInt(numeroPacotes);
             String response = restTemplate.getForObject(url, String.class);
-            System.out.println(response);
+         
         }
     }
 }

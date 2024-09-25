@@ -19,9 +19,7 @@ public class DistribuicaoService {
     public void distribuirNovoPacote(Pacote pacote) {
 
         UnidadeTratamento unidadeSelecionada = unidadeTratamentoService.selecionarProximaUnidadeDoDia(pacote);
-        
-        System.out.println("Unidade selecionada: " + unidadeSelecionada.getNome());
-
+        System.out.println("---");
         Distribuicao novaDistribuicao = new Distribuicao();
         novaDistribuicao.setPacote(pacote);
         novaDistribuicao.setUsuario(unidadeSelecionada.getUsuarioImpessoal());

@@ -3,6 +3,8 @@ package com.mateusjose98.distribuicao.service;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,13 +24,14 @@ public class UnidadeTratamentoService {
     private DistribuicaoRepository distribuicaoRepository;
     @Autowired
     private DistribuicaoEstrategicaRepository distribuicaoEstrategicaRepository;
+    private final Logger log = LoggerFactory.getLogger(UnidadeTratamentoService.class);
 
 
     public UnidadeTratamento selecionarProximaUnidadeDoDia(Pacote pacote) {
 
-        var distribuicaoEstrategica = distribuicaoEstrategicaRepository.findByCliente(pacote.getCliente());
-        
+        var distribuicaoEstrategica = distribuicaoEstrategicaRepository.findByCliente(pacote.getCliente());  
         if(distribuicaoEstrategica.isPresent()) {
+        	log.info("Pacote de um cliente Estratégico {}", distribuicaoEstrategica.get().getUnidadeTratamento());
         	return distribuicaoEstrategica.get().getUnidadeTratamento();
         }
        
@@ -40,39 +43,39 @@ public class UnidadeTratamentoService {
     	long quantidadeRecebidaHojePorTodos = distribuicaoRepository.countByDataDistribuicao(LocalDate.now());
         
         UnidadeTratamento unidadeSelecionada = null;
-        if(quantidadeRecebidaHojePorTodos == 0){ // escolhemos alguma por default
-            return this.buscarUnidade(1L);
+        if(quantidadeRecebidaHojePorTodos == 0){ 
+        	log.info("Quantidade total 0, unidade default 1L");
+            return unidadeTratamentoRepository.findById(1L).orElse(null);
         }
 
-    	List<UnidadeTratamento> unidades = this.listarUnidades();    
+    	List<UnidadeTratamento> unidades = unidadeTratamentoRepository.findAll();    
+    	log.info("{}", unidades);
         Double maiorDefasagem = Double.NEGATIVE_INFINITY;
         for(UnidadeTratamento unidadeCandidata : unidades) {
-
-            Double porcentagemMaximaDiariaEsperada = unidadeCandidata.getPorcentagemMaximaDiaria() / CEM;
-            Double qteTeoricaDaUnidade = quantidadeRecebidaHojePorTodos * porcentagemMaximaDiariaEsperada;
-
-            var qteRealJaRecebidaDaUnidade = distribuicaoRepository.countByUsuarioAndDataDistribuicao(unidadeCandidata.getUsuarioImpessoal(), LocalDate.now());
-
-            Double defasagem = qteTeoricaDaUnidade - qteRealJaRecebidaDaUnidade;
-
-            if(defasagem > maiorDefasagem){
+        
+            Double defasagemDaUnidade = calcularDefasagemUnidade(unidadeCandidata, quantidadeRecebidaHojePorTodos);
+            
+            log.info("Tentativa para unidade {} defasagem da unidade {} | maior defasagem {}", unidadeCandidata.getNome(), defasagemDaUnidade, maiorDefasagem);
+            
+            if(defasagemDaUnidade > maiorDefasagem){
                 unidadeSelecionada = unidadeCandidata;
-                maiorDefasagem = defasagem;
+                maiorDefasagem = defasagemDaUnidade;
             }
 
         }
+        log.info("Unidade selecionada {}", unidadeSelecionada.getNome());
         return unidadeSelecionada;
     }
     
-    public List<UnidadeTratamento> listarUnidades() {
-        return unidadeTratamentoRepository.findAll();
-    }
 
-    public UnidadeTratamento buscarUnidade(Long id) {
-        return unidadeTratamentoRepository.findById(id).orElse(null);
-    }
+	private Double calcularDefasagemUnidade(UnidadeTratamento unidadeCandidata, long quantidadeRecebidaHojePorTodos) {
+		 Double porcentagemMaximaDiariaEsperada = unidadeCandidata.getPorcentagemMaximaDiaria() / CEM;
+         log.info("Tentativa para unidade {}, porcentagem diária {}", unidadeCandidata.getNome(), unidadeCandidata.getPorcentagemMaximaDiaria());
+         Double qteTeoricaDaUnidade = quantidadeRecebidaHojePorTodos * porcentagemMaximaDiariaEsperada;
 
-    public UnidadeTratamento salvarUnidade(UnidadeTratamento unidadeTratamento) {
-        return unidadeTratamentoRepository.save(unidadeTratamento);
-    }
+         var qteRealJaRecebidaDaUnidade = distribuicaoRepository.countByUsuarioAndDataDistribuicao(unidadeCandidata.getUsuarioImpessoal(), LocalDate.now());
+
+         return qteTeoricaDaUnidade - qteRealJaRecebidaDaUnidade;
+	}
+
 }
