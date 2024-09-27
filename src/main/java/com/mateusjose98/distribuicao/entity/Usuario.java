@@ -1,9 +1,6 @@
 package com.mateusjose98.distribuicao.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,4 +16,9 @@ public class Usuario {
     @EqualsAndHashCode.Include
     private Long id;
     private String nome;
+    @ManyToOne
+    @JoinColumn(name = "unidade_tratamento_id")
+    private UnidadeTratamento unidadeTratamento;
+    @Column(name = "porcentagem_maxima_diaria")
+    private Double porcentagemMaximaDiaria;
 }

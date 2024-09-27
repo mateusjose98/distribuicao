@@ -25,10 +25,6 @@ public class UnidadeTratamento {
     private String nome;
     private Double porcentagemMaximaDiaria;
 
-    @OneToOne
-    @JoinColumn
-    @ToString.Exclude
-    private Usuario usuarioImpessoal;
     
 
 }

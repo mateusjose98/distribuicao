@@ -15,12 +15,12 @@ public class Test {
     @Scheduled(fixedRate = 1, timeUnit = TimeUnit.DAYS)
     public void run() throws Exception {
         RestTemplate restTemplate = new RestTemplate();
-        int numeroPacotes = 27;
+        int numeroPacotes = 100;
         for (int i = 1; i <= numeroPacotes; i++) {
         	System.out.println(i);
         	 String url = "http://localhost:8080/pagamento/" + i;
             restTemplate.getForObject(url, String.class);
-//            Thread.sleep(1000L);
+            Thread.sleep(100L);
          
         }
     }
