@@ -18,6 +18,7 @@ import java.util.List;
 @Slf4j
 public class DistribuicaoService {
 
+    public static final double CEM = 100.0;
     @Autowired
     private UnidadeTratamentoService unidadeTratamentoService;
 
@@ -37,7 +38,6 @@ public class DistribuicaoService {
 
         log.info("Unidade selecionada: {}", unidadeSelecionada.getNome());
 
-        // Seleciona o usuário dentro da unidade com maior defasagem
         Usuario usuarioSelecionado = selecionarUsuarioParaPacote(unidadeSelecionada);
         if (usuarioSelecionado == null) {
             log.error("Nenhum usuário disponível na unidade {} para distribuir o pacote {}", unidadeSelecionada.getNome(), pacote.getNumeroPacote());
@@ -58,16 +58,19 @@ public class DistribuicaoService {
     }
 
     private Usuario selecionarUsuarioParaPacote(UnidadeTratamento unidade) {
+        LocalDate hoje = LocalDate.now();
+        long quantidadeRecebidaHojePorTodos = distribuicaoRepository.countByDataDistribuicao(hoje);
         List<Usuario> usuarios = usuarioRepository.findByUnidadeTratamento(unidade);
         Usuario usuarioSelecionado = null;
         Double maiorDefasagemUsuario = Double.NEGATIVE_INFINITY;
 
         for (Usuario usuario : usuarios) {
-            Double porcentagemMaximaUsuario = usuario.getPorcentagemMaximaDiaria() / 100.0;
-            long quantidadeRecebidaHojePorTodos = distribuicaoRepository.countByDataDistribuicao(LocalDate.now());
-            Double capacidadeTeoricaUsuario = quantidadeRecebidaHojePorTodos * (unidade.getPorcentagemMaximaDiaria() / 100.0) * porcentagemMaximaUsuario;
+            Double porcentagemMaximaUsuario = usuario.getPorcentagemMaximaDiaria() / CEM;
 
-            long pacotesRecebidosHoje = distribuicaoRepository.countByUsuarioAndDataDistribuicao(usuario, LocalDate.now());
+            Double capacidadeTeoricaUsuario =
+                    quantidadeRecebidaHojePorTodos * (unidade.getPorcentagemMaximaDiaria() / CEM) * porcentagemMaximaUsuario;
+
+            long pacotesRecebidosHoje = distribuicaoRepository.countByUsuarioAndDataDistribuicao(usuario, hoje);
 
             Double defasagemUsuario = capacidadeTeoricaUsuario - pacotesRecebidosHoje;
             log.info("Defasagem para usuário {}: {}", usuario.getNome(), defasagemUsuario);

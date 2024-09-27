@@ -32,14 +32,9 @@ public class PagamentoService {
 
             Pagamento pagamento = new Pagamento();
             pagamento.setValor(BigDecimal.valueOf(new Random().nextDouble(1000) * 700));
-
             pagamentoRepository.save(pagamento);
-
             pacote.get().setPagamento(pagamento);
-
             pacoteRepository.save(pacote.get());
-
-            // distribuir pacote para unidadeTratamento
 
             distribuicaoService.distribuirNovoPacote(pacote.get());
         }
